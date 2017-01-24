@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang=en>
+<head>
+  <title>Passwordless Demo</title>
+
+  <meta charset=utf-8>
+  <meta name=viewport content=width=device-width,minimum-scale=1,initial-scale=1,user-scalable=yes>
+
+  <link rel=stylesheet href=https://unpkg.com/bootstrap@3.3.7/dist/css/bootstrap.min.css>
+
+  <script src=https://unpkg.com/vue@2.1.10/dist/vue.js></script>
+  <script src=https://unpkg.com/vue-router@2.1.3/dist/vue-router.js></script>
+  <script src=https://unpkg.com/vuelidate@0.2.0/dist/vuelidate.min.js></script>
+  <script src=https://unpkg.com/vuelidate@0.2.0/dist/validators.min.js></script>
+  <script src=https://unpkg.com/vue-resource@1.0.3/dist/vue-resource.min.js></script>
+
+  <style>
+  body {
+    padding: 50px 0;
+  }
+  button {
+    margin-top: 6px;
+  }
+  .form-centered {
+    max-width: 330px;
+    padding: 15px;
+    margin: auto;
+  }
+  .input-group-message {
+    display: none;
+    color: #a94442;
+  }
+  .input-group-error .input-group-message {
+    display: inline;
+  }
+  .input-group-error input {
+    border-color: #a94442;
+  }
+  .input-group-error input:focus {
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(169,68,66,.6);
+    border-color: #a94442;
+  }
+  </style>
+</head>
+<body>
+  <div id=app>
+    <router-view></router-view>
+  </div>
+
+  <script type=text/x-template id=home-page-template>
+    <form class=form-centered @submit.prevent=authenticate novalidate>
+      <h2>Passwordless Demo</h2>
+      <div :class="{'input-group-error':$v.phone.$error}">
+        <div class=input-group>
+          <span class=input-group-addon>
+            <span class="glyphicon glyphicon-phone" aria-hidden="true"></span>
+          </span>
+          <input type=tel class=form-control placeholder="Phone number"
+              v-model=phone name=phone @blur=$v.phone.$touch()>
+        </div>
+        <span class=input-group-message v-if=!$v.phone.required>Please enter your phone number</span>
+        <span class=input-group-message v-if=!$v.phone.phone>This is not a phone number</span>
+        <span class=input-group-message v-if=!$v.phone.phoneDigitsBetween>We only accept 6 to 15 digit phone numbers</span>
+      </div>
+      <button class="btn btn-primary btn-block">Sign In</button>
+    </form>
+  </script>
+
+  <script>
+  Vue.use(window.vuelidate.default);
+
+  const APP_SERVICE_URL = 'http://localhost:8081/app.php/api';
+
+  const required = window.validators.required;
+  const phone = function (value) {
+    return !required(value) || !!value.match(/^[\d\s()+-]+$/);
+  };
+  const digitsBetween = function (min, max) {
+    return function (value) {
+      const numChars = value.match(/\d/g);
+      return !required(value) || (!!numChars && numChars.length >= min && numChars.length <= max);
+    }
+  };
+  const phoneDigitsBetween = function (min, max) {
+    return function (value) {
+      return !phone(value) || digitsBetween(min, max)(value);
+    }
+  };
+
+  const router = new VueRouter({
+    routes: [
+      {
+        path: '/',
+        component: {
+          template: '#home-page-template',
+          data: function () {
+            return {
+              phone: ''
+            };
+          },
+          validations: {
+            phone: {
+              required,
+              phone,
+              phoneDigitsBetween: phoneDigitsBetween(6, 15)
+            }
+          },
+          methods: {
+            authenticate: function (event) {
+              if (this.$v.$invalid) {
+                this.$v.$touch();
+                return;
+              }
+
+              this.$http.post(`${APP_SERVICE_URL}/authenticate`).then(function (response) {
+                console.log(response);
+              }, function (response) {
+                console.error(response);
+              });
+            }
+          }
+        }
+      },
+      {
+        path: '/secret',
+        component: {
+          template: '<p>This is where the secret list of albums will go</p>'
+        }
+      }
+    ]
+  });
+
+  new Vue({
+    el: '#app',
+    router
+  });
+  </script>
+</body>
+</html>
