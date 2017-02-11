@@ -51,12 +51,12 @@
   </div>
 
   <script type=text/x-template id=home-page-template>
-    <form class=form-centered @submit.prevent=authenticate novalidate>
+    <form class=form-centered @submit.prevent=send_otp novalidate>
       <h2>Passwordless Demo</h2>
       <div :class="{'input-group-error':$v.phone.$error}">
         <div class=input-group>
           <span class=input-group-addon>
-            <span class="glyphicon glyphicon-phone" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-phone" aria-hidden=true></span>
           </span>
           <input type=tel class=form-control placeholder="Phone number"
               v-model=phone name=phone @blur=$v.phone.$touch()>
@@ -64,6 +64,23 @@
         <span class=input-group-message v-if=!$v.phone.required>Please enter your phone number</span>
         <span class=input-group-message v-if=!$v.phone.phone>This is not a phone number</span>
         <span class=input-group-message v-if=!$v.phone.phoneDigitsBetween>We only accept 6 to 15 digit phone numbers</span>
+      </div>
+      <button class="btn btn-primary btn-block">Send an OTP</button>
+    </form>
+  </script>
+
+  <script type=text/x-template id=enter-otp-template>
+    <form class=form-centered @submit.prevent=authenticate novalidate>
+      <h2>Passwordless Demo</h2>
+      <div :class="{'input-group-error':$v.otp.$error}">
+        <div class=input-group>
+          <span class=input-group-addon>
+            <span class="glyphicon glyphicon-log-in" aria-hidden=true></span>
+          </span>
+          <input type=text class=form-control placeholder=OTP
+            v-model=otp name=otp @blur=$v.otp.$touch()>
+        </div>
+        <span class=input-group-message v-if=!$v.otp.required>Please enter your OTP</span>
       </div>
       <button class="btn btn-primary btn-block">Sign In</button>
     </form>
@@ -142,18 +159,40 @@
             }
           },
           methods: {
-            authenticate: function (event) {
+            send_otp: function (event) {
               if (this.$v.$invalid) {
                 this.$v.$touch();
                 return;
               }
 
-              this.$http.get(`${APP_SERVICE_URL}/authenticate`, {
+              this.$http.get(`${APP_SERVICE_URL}/authenticate/send_otp`, {
                 params: {
                   phone: this.phone
                 }
               }).then(function (response) {
+                localStorage.setItem('authorization_code', JSON.stringify(response.body.authorization_code));
+                this.$router.push('/enter_otp');
+              }, function (response) {
+                console.error(response);
+              });
+            }
+          }
+        }
+      },
+      {
+        path: '/enter_otp',
+        component: {
+          template: '#enter-otp-template',
+          methods: {
+            authenticate: function (event) {
+              this.$http.get(`${APP_SERVICE_URL}/authenticate/verify_otp`, {
+                params: {
+                  otp: this.otp,
+                  authorization_code: localStorage.getItem('authorization_code')
+                }
+              }).then(function (response) {
                 localStorage.setItem('userData', JSON.stringify(response.body));
+                localStorage.removeItem('authorization_code');
                 this.$router.push('/secret/albums');
               }, function (response) {
                 console.error(response);
