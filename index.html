@@ -72,10 +72,11 @@
   <script type=text/x-template id=enter-otp-template>
     <form class=form-centered @submit.prevent=authenticate novalidate>
       <h2>Passwordless Demo</h2>
+      <p class=text-info>Please confirm your identity with your OTP.</p>
       <div :class="{'input-group-error':$v.otp.$error}">
         <div class=input-group>
           <span class=input-group-addon>
-            <span class="glyphicon glyphicon-certificate" aria-hidden=true></span>
+            <span class="glyphicon glyphicon-lock" aria-hidden=true></span>
           </span>
           <input type=text class=form-control placeholder=OTP
             v-model=otp name=otp @blur=$v.otp.$touch()>
