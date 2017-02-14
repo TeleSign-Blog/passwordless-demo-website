@@ -170,7 +170,12 @@
                   phone: this.phone
                 }
               }).then(function (response) {
-                localStorage.setItem('authorization_code', JSON.stringify(response.body.authorization_code));
+                if (response.body.error) {
+                  alert(response.body.error);
+                  return;
+                }
+
+                localStorage.setItem('authorization_code', response.body.authorization_code);
                 this.$router.push('/enter_otp');
               }, function (response) {
                 console.error(response);
@@ -183,14 +188,34 @@
         path: '/enter_otp',
         component: {
           template: '#enter-otp-template',
+          data: function () {
+            return {
+              otp: ''
+            };
+          },
+          validations: {
+            otp: {
+              required
+            }
+          },
           methods: {
             authenticate: function (event) {
+              if (this.$v.$invalid) {
+                this.$v.$touch();
+                return;
+              }
+
               this.$http.get(`${APP_SERVICE_URL}/authenticate/verify_otp`, {
                 params: {
                   otp: this.otp,
                   authorization_code: localStorage.getItem('authorization_code')
                 }
               }).then(function (response) {
+                if (response.body.error) {
+                  alert(response.body.error);
+                  return;
+                }
+
                 localStorage.setItem('userData', JSON.stringify(response.body));
                 localStorage.removeItem('authorization_code');
                 this.$router.push('/secret/albums');
@@ -234,6 +259,11 @@
                       'Authorization': `${userData.token_type} ${userData.id_token}`
                     }
                   }).then(function (response) {
+                    if (response.body.error) {
+                      alert(response.body.error);
+                      return;
+                    }
+
                     this.albums = response.body.data;
                   }, function (response) {
                     console.error(response);
