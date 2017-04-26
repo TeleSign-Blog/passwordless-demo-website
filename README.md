@@ -4,4 +4,4 @@ It goes in pair with [the blog-passwordless-service](https://bitbucket.c11.teles
 
 ## Running Locally
 
-Open `index.html` under any static-content web server. [Http-server](https://www.npmjs.com/package/http-server) adequately simple.
+Open `index.html` under any static-content web server. [Http-server](https://www.npmjs.com/package/http-server) is adequately simple.
