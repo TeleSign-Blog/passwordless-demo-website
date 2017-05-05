@@ -1,6 +1,6 @@
-This is made for a possible future blog post "Passwordless Authentication with Slim and Vue.js".
+# Passwordless Service Website
 
-It goes in pair with [the blog-passwordless-service](https://bitbucket.c11.telesign.com/projects/SAN/repos/blog-passwordless-service).
+Accompanies post [Passwordless Authentication with Slim and Vue.js](https://www.telesign.com/blog/post/passwordless-authentication-with-slim-and-vue.js/), same as [Passwordless Demo Service](https://github.com/TeleSign-Blog/passwordless-demo-service).
 
 ## Running Locally
 
